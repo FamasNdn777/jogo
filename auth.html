@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f0f1a, #1c1c2b, #29293d);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 40px 25px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 20px auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 30px;
+      color: #bbb;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #fff;
+      color: #000;
+      font-size: 1rem;
+      font-weight: bold;
+      padding: 14px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transition: 0.3s;
+      cursor: pointer;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    .btn-google:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .btn-google img {
+      width: 22px;
+      height: 22px;
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="https://i.postimg.cc/6qzBkTWT/Imagem-do-Whats-App-de-2025-09-25-s-23-02-24-fb0a6ecc.jpg" alt="OTK">
+    </div>
+
+    <h1>Bem-vindo!</h1>
+    <p>Faça login para continuar e aproveitar o app.</p>
+
+    <button id="btnGoogle" class="btn-google">
+      <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
+      Continuar com Google
+    </button>
+  </div>
+
+  <script>
+    // Config do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgDGmitCLvnLgmp2QZq8t92Np2Ojtqq8I",
+      authDomain: "otk-animes-a6d2b.firebaseapp.com",
+      projectId: "otk-animes-a6d2b",
+      storageBucket: "otk-animes-a6d2b.appspot.com",
+      messagingSenderId: "896949212842",
+      appId: "1:896949212842:web:69b21575085fb121ece2d3",
+      measurementId: "G-VK841D7Z1C"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Login com Google
+    document.getElementById("btnGoogle").addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(async (result) => {
+          const user = result.user;
+          const token = await user.getIdToken();
+          const email = encodeURIComponent(user.email);
+
+          // Redireciona para o deep link do app com email + token
+          window.location.href = `meuapp://authsuccess?email=${email}&token=${token}`;
+        })
+        .catch((error) => {
+          alert("Erro ao fazer login: " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>

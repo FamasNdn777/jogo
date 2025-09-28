@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convide Amigos</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+    body{background:#0f0f1a;color:#fff;display:flex;flex-direction:column;align-items:center;padding:20px;text-align:center;}
+    h1{font-size:1.8rem;margin:20px 0;color:#ff7a00;}
+    .card{background:#1a1a2e;padding:20px;border-radius:15px;width:100%;max-width:420px;box-shadow:0 6px 15px rgba(0,0,0,0.5);margin-bottom:30px;}
+    .card p{font-size:1rem;margin:15px 0;}
+    .code-box{background:#2d2d44;padding:12px;border-radius:10px;font-weight:bold;letter-spacing:2px;margin-bottom:15px;display:flex;align-items:center;justify-content:center;min-height:40px;flex-direction:column;}
+    .spinner{border:4px solid rgba(255,255,255,0.2);border-top:4px solid #03dac6;border-radius:50%;width:22px;height:22px;animation:spin 1s linear infinite;}
+    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    .btn{display:block;width:100%;padding:14px;margin:10px 0;border:none;border-radius:10px;font-size:1rem;font-weight:bold;cursor:pointer;transition:0.3s;}
+    .btn-copy{background:#03dac6;color:#000;}
+    .btn-copy:hover{opacity:0.9;}
+    .btn-generate{background:#ff7a00;color:#fff;}
+    .btn-generate:hover{opacity:0.9;}
+    .btn-whatsapp{background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;}
+    .btn-whatsapp img{width:20px;height:20px;}
+    .btn-whatsapp:hover{opacity:0.9;}
+    .btn-google{background:#fff;color:#000;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:15px;}
+    .btn-google img{width:20px;height:20px;}
+    .toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#03dac6;color:#000;padding:12px 20px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5);font-weight:bold;animation:fadeIn 0.5s,fadeOut 0.5s 3s forwards;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes fadeOut{from{opacity:1;}to{opacity:0;}}
+    .mission-box{background:#1a1a2e;padding:20px;border-radius:15px;width:100%;max-width:420px;box-shadow:0 6px 15px rgba(0,0,0,0.5);}
+    .progress-container{position:relative;width:100%;height:6px;background:#333;border-radius:5px;margin:20px 0 40px;}
+    .progress-bar{position:absolute;height:100%;background:#0ff;width:0%;border-radius:5px;transition:width 0.3s;}
+    .checkpoints{position:absolute;top:-14px;width:100%;display:flex;justify-content:space-between;}
+    .checkpoints span{font-size:1.8rem;position:relative;cursor:pointer;transition:0.3s;}
+    .checkpoints span.atingido{color:gold;animation:flyGift 1.5s ease forwards;}
+    .checkpoints span small{display:block;font-size:0.8rem;color:#aaa;position:absolute;top:30px;left:50%;transform:translateX(-50%);}
+    @keyframes flyGift{0%{transform:translateY(0) scale(1);}50%{transform:translateY(-40px) scale(1.3) rotate(20deg);}100%{transform:translateY(0) scale(1) rotate(0);}}
+    .open-gift{animation:openGift 2s ease forwards;}
+    @keyframes openGift{0%{transform:scale(1);}50%{transform:scale(1.4) rotate(15deg);}100%{transform:scale(1) rotate(0);} }
+    .reward-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;padding:30px;border-radius:15px;box-shadow:0 6px 20px rgba(0,0,0,0.8);color:#fff;z-index:1000;text-align:center;display:none;}
+    .reward-popup h2{color:gold;margin-bottom:15px;}
+  </style>
+</head>
+<body>
+
+<h1>Convide Amigos 🎁</h1>
+
+<div class="card">
+  <p>Compartilhe seu código e ganhe <b>prêmios</b> quando amigos se cadastrarem!</p>
+  <div class="code-box" id="inviteCode"><div class="spinner"></div></div>
+  <button class="btn btn-copy" onclick="copiarCodigo()">Copiar código</button>
+  <button class="btn btn-generate" onclick="gerarCodigo()">Gerar novo código</button>
+  <a id="whatsappBtn" class="btn btn-whatsapp" target="_blank">
+    <img src="https://cdn-icons-png.flaticon.com/512/124/124034.png"> Convidar pelo WhatsApp
+  </a>
+  <!-- botão corrigido -->
+  <button class="btn btn-google" onclick="loginGoogle()">
+    <img src="https://www.svgrepo.com/show/355037/google.svg"> Entrar com Google
+  </button>
+</div>
+
+<div class="mission-box">
+  <h3>Progresso de convites</h3>
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="checkpoints">
+      <span data-alvo="15">🎁<small>15</small></span>
+      <span data-alvo="30">🎁<small>30</small></span>
+      <span data-alvo="60">🎁<small>60</small></span>
+      <span data-alvo="100">🎁<small>100</small></span>
+      <span data-alvo="240">🎁<small>240</small></span>
+    </div>
+  </div>
+  <p id="convitesInfo">Você convidou 0 amigos</p>
+</div>
+
+<!-- Popup recompensa -->
+<div class="reward-popup" id="rewardPopup">
+  <h2>🎉 Presente Aberto!</h2>
+  <p id="rewardMsg">Você ganhou dias de VIP!</p>
+  <button class="btn btn-generate" onclick="fecharPopup()">Fechar</button>
+</div>
+
+<!-- Firebase Modular -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDgDGmitCLvnLgmp2QZq8t92Np2Ojtqq8I",
+    authDomain: "otk-animes-a6d2b.firebaseapp.com",
+    projectId: "otk-animes-a6d2b",
+    storageBucket: "otk-animes-a6d2b.appspot.com",
+    messagingSenderId: "896949212842",
+    appId: "1:896949212842:web:69b21575085fb121ece2d3",
+    measurementId: "G-VK841D7Z1C"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let codigo = "";
+  let linkConvite = "";
+  let convites = 0;
+  const metas = [15, 30, 60, 100, 240];
+
+  function gerarCodigoAleatorio(tamanho = 6){
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for(let i=0; i<tamanho; i++){
+      result += chars.charAt(Math.floor(Math.random()*chars.length));
+    }
+    return result;
+  }
+
+  // 🚀 agora abre o navegador externo pro auth.html
+  function loginGoogle(){
+    window.location.href = "https://otkanimesweb.vercel.app/auth.html";
+  }
+  window.loginGoogle = loginGoogle;
+
+  onAuthStateChanged(auth, async (user)=>{
+    const inviteEl = document.getElementById("inviteCode");
+    inviteEl.innerHTML = '<div class="spinner"></div>';
+
+    if(user){
+      const emailUsuario = user.email;
+      const userRef = doc(db, "Convide", emailUsuario);
+      const docSnap = await getDoc(userRef);
+
+      if(docSnap.exists()){
+        codigo = docSnap.data().codigo;
+        linkConvite = docSnap.data().linkConvite;
+        convites = docSnap.data().convidados || 0;
+      } else {
+        codigo = gerarCodigoAleatorio();
+        linkConvite = `https://otkanimesweb.vercel.app/baixar.html?code=${codigo}`;
+        await setDoc(userRef, { email: emailUsuario, codigo: codigo, linkConvite: linkConvite, convidados: 0 });
+        convites = 0;
+      }
+
+      inviteEl.innerHTML = `
+        <div><b>Código:</b> ${codigo}</div>
+        <div><b>Link:</b> <a href="${linkConvite}" target="_blank">${linkConvite}</a></div>
+      `;
+      atualizarWhatsapp();
+      atualizarBarra();
+    } else {
+      inviteEl.innerText = "⚠️ Faça login!";
+    }
+  });
+
+  function atualizarWhatsapp(){
+    document.getElementById("whatsappBtn").href = 
+      `https://wa.me/?text=Ei!%20Baixe%20o%20app%20OTK%20Animes%20📲%20e%20use%20meu%20código%20${codigo}!%0A👉%20${linkConvite}`;
+  }
+
+  function atualizarBarra() {
+    let porcentagem = (convites / metas[metas.length-1]) * 100;
+    document.getElementById("progressBar").style.width = Math.min(porcentagem, 100) + "%";
+    document.getElementById("convitesInfo").innerText = `Você convidou ${convites} amigos`;
+
+    document.querySelectorAll(".checkpoints span").forEach(span => {
+      let alvo = parseInt(span.dataset.alvo);
+      if (convites >= alvo && !span.classList.contains("atingido")) {
+        span.classList.add("atingido","open-gift");
+        setTimeout(()=>sortearPremio(alvo),1500);
+      }
+    });
+  }
+
+  function copiarCodigo(){
+    if(codigo){
+      navigator.clipboard.writeText(`${codigo} - ${linkConvite}`).then(()=>{
+        showToast("✅ Código copiado!");
+      });
+    } else {
+      showToast("⚠️ Faça login primeiro!");
+    }
+  }
+  window.copiarCodigo = copiarCodigo;
+
+  async function gerarCodigo(){
+    const user = auth.currentUser;
+    if(!user){ showToast("⚠️ Faça login primeiro!"); return; }
+    const novoCodigo = gerarCodigoAleatorio();
+    const novoLink = `https://otkanimesweb.vercel.app/baixar.html?code=${novoCodigo}`;
+    await updateDoc(doc(db, "Convide", user.email), { codigo: novoCodigo, linkConvite: novoLink });
+    codigo = novoCodigo;
+    linkConvite = novoLink;
+    document.getElementById("inviteCode").innerHTML = `
+      <div><b>Código:</b> ${codigo}</div>
+      <div><b>Link:</b> <a href="${linkConvite}" target="_blank">${linkConvite}</a></div>
+    `;
+    atualizarWhatsapp();
+    showToast("✅ Novo código gerado!");
+  }
+  window.gerarCodigo = gerarCodigo;
+
+  function showToast(msg){
+    const toast=document.createElement('div');
+    toast.className="toast";
+    toast.innerText=msg;
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),3500);
+  }
+
+  function sortearPremio(alvo){
+    let dias = 0;
+    if(alvo===15) dias = Math.floor(Math.random()*(7-3+1))+3;
+    if(alvo===30) dias = Math.floor(Math.random()*(14-9+1))+9;
+    if(alvo===60) dias = Math.floor(Math.random()*(24-20+1))+20;
+    if(alvo===100) dias = Math.floor(Math.random()*(31-28+1))+28;
+    if(alvo===240) dias = Math.floor(Math.random()*(60-45+1))+45;
+
+    document.getElementById("rewardMsg").innerText = `Você ganhou 🎁 ${dias} dias de VIP!`;
+    document.getElementById("rewardPopup").style.display = "block";
+  }
+
+  window.fecharPopup = ()=> document.getElementById("rewardPopup").style.display = "none";
+</script>
+
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planos VIP</title>
+  <style>
+    * {margin:0; padding:0; box-sizing:border-box; font-family:'Arial', sans-serif;}
+    body {background:#0f0f1a; color:#fff; min-height:100vh; padding:50px 20px; display:flex; flex-direction:column; align-items:center;}
+    h1 {font-size:2rem; margin-bottom:40px; text-align:center;}
+    h1 span {color:#ff7a00;}
+
+    .planos {display:flex; flex-wrap:wrap; gap:30px; justify-content:center; width:100%; max-width:1200px;}
+
+    .plano {
+      background:#1a1a2e; border-radius:15px; padding:30px 20px; width:280px; text-align:center;
+      box-shadow:0 10px 25px rgba(0,0,0,0.4); transition:transform 0.3s, box-shadow 0.3s; cursor:pointer;
+    }
+    .plano:hover {transform:translateY(-5px); box-shadow:0 15px 30px rgba(0,0,0,0.6);}
+    .plano h2 {margin-bottom:10px; font-size:1.5rem;}
+    .plano .preco {font-size:1.5rem; color:#00ff6a; margin-bottom:20px;}
+    .plano ul {list-style:none; margin-bottom:25px;}
+    .plano ul li {margin:12px 0; display:flex; align-items:center; justify-content:center; font-size:0.95rem;}
+    .plano ul li::before {content:'✔'; color:#6a5af9; margin-right:10px;}
+
+    /* Botões sem highlight azul */
+    .plano button {
+      padding:12px 25px; border:none; border-radius:50px;
+      background:linear-gradient(90deg,#ff3860,#ff7a00); color:#fff; font-size:1rem; cursor:pointer; transition:opacity 0.3s;
+      outline:none; user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .plano button:focus {outline:none;}
+    .plano button:hover {opacity:0.9;}
+
+    /* Input Gmail sem highlight */
+    .email-box {margin-bottom:30px; text-align:center;}
+    .email-box input {
+      padding:12px; border-radius:10px; border:none; width:280px; text-align:center;
+      font-size:1rem; outline:none;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Loader */
+    .loader {
+      display:none;
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.85); z-index:50; justify-content:center; align-items:center;
+      font-size:1.2rem; font-weight:bold; color:#fff; flex-direction:column;
+    }
+    .loader::after {
+      content:""; width:50px; height:50px; border:5px solid #fff; border-top-color:#ff7a00;
+      border-radius:50%; animation:spin 1s linear infinite; margin-top:15px;
+    }
+    @keyframes spin {to {transform:rotate(360deg);} }
+
+    /* Dialog estilo app nativo */
+    .dialog {
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.8); z-index:100; justify-content:center; align-items:center;
+    }
+    .dialog-content {
+      background:#1a1a2e; padding:25px; border-radius:15px; text-align:center;
+      width:90%; max-width:350px; box-shadow:0 10px 25px rgba(0,0,0,0.6);
+    }
+    .dialog-content h2 {margin-bottom:15px; color:#ff7a00;}
+    .dialog-content p {margin-bottom:20px; font-size:0.95rem; line-height:1.4;}
+    .dialog-content button {
+      padding:10px 20px; border:none; border-radius:10px; background:#ff7a00; color:#fff; font-size:1rem; cursor:pointer;
+      outline:none; user-select:none; -webkit-tap-highlight-color: transparent;
+    }
+    .dialog-content button:focus {outline:none;}
+  </style>
+</head>
+<body>
+
+<h1>Escolha <span>seu plano</span></h1>
+
+<!-- Campo de email -->
+<div class="email-box">
+  <input type="email" id="emailUser" placeholder="Digite seu Gmail">
+</div>
+
+<div class="planos">
+  <div class="plano">
+    <h2>Gratuito</h2>
+    <div class="preco">R$ 0/mês</div>
+    <ul><li>Acesso limitado</li></ul>
+    <button onclick="assinarPlano('Gratuito')">Usar agora</button>
+  </div>
+
+  <div class="plano">
+    <h2>Semanal</h2>
+    <div class="preco">R$ 5,90</div>
+    <ul><li>Acesso Liberado</li><li>Premium por 7 dias</li></ul>
+    <button onclick="assinarPlano('Semanal')">Assinar</button>
+  </div>
+
+  <div class="plano">
+    <h2>Mensal</h2>
+    <div class="preco">R$ 15,90</div>
+    <ul><li>Acesso Liberado</li><li>Premium por 30 dias</li></ul>
+    <button onclick="assinarPlano('Mensal')">Assinar</button>
+  </div>
+</div>
+
+<div class="loader" id="loader">Processando...</div>
+
+<!-- Dialog genérico -->
+<div class="dialog" id="dialog">
+  <div class="dialog-content">
+    <h2 id="dialogTitle">Aviso</h2>
+    <p id="dialogMessage">Mensagem aqui...</p>
+    <button onclick="fecharDialog()">OK</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDgDGmitCLvnLgmp2QZq8t92Np2Ojtqq8I",
+    authDomain: "otk-animes-a6d2b.firebaseapp.com",
+    projectId: "otk-animes-a6d2b",
+    storageBucket: "otk-animes-a6d2b.firebasestorage.app",
+    messagingSenderId: "896949212842",
+    appId: "1:896949212842:web:69b21575085fb121ece2d3",
+    measurementId: "G-VK841D7Z1C"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let planoSelecionado = "";
+  let emailSelecionado = "";
+
+  function mostrarDialog(titulo, mensagem){
+    document.getElementById("dialogTitle").textContent = titulo;
+    document.getElementById("dialogMessage").textContent = mensagem;
+    document.getElementById("dialog").style.display = "flex";
+  }
+
+  window.fecharDialog = function(){
+    document.getElementById("dialog").style.display = "none";
+    if(planoSelecionado && planoSelecionado !== "Gratuito"){
+      window.location.href = `pagamento.html?plano=${planoSelecionado}&email=${encodeURIComponent(emailSelecionado)}`;
+    }
+  }
+
+  async function assinarPlano(tipoPlano){
+    const loader = document.getElementById("loader");
+    const email = document.getElementById("emailUser").value.trim();
+    if(!email){
+      mostrarDialog("⚠️ Atenção", "Digite seu Gmail antes de continuar.");
+      return;
+    }
+
+    loader.style.display = "flex";
+
+    try {
+      const ref = doc(db, "assinaturas", email);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const dados = snap.data();
+
+        if (dados.status === "Confirmado" || dados.status === "Ativo") {
+          loader.style.display = "none";
+          mostrarDialog("✅ Plano ativo", `Você já possui o plano (${dados.plano}) ativo/confirmado.`);
+          atualizarBotoes(email);
+          return;
+        }
+
+        if (dados.status === "Aguardando pagamento") {
+          loader.style.display = "none";
+          mostrarDialog("⚠️ Pagamento pendente", `Você já possui um pagamento pendente (${dados.plano}). Aguarde a confirmação.`);
+          atualizarBotoes(email);
+          return;
+        }
+      }
+
+      const agora = new Date();
+      await setDoc(ref, {
+        email: email,
+        plano: tipoPlano,
+        status: tipoPlano === "Gratuito" ? "Ativo" : "Aguardando pagamento",
+        criadoEm: agora
+      }, { merge:true });
+
+      loader.style.display = "none";
+
+      planoSelecionado = tipoPlano;
+      emailSelecionado = email;
+
+      if(tipoPlano === "Gratuito"){
+        mostrarDialog("✅ Sucesso", "Plano gratuito ativado! Redirecionando...");
+        setTimeout(()=> window.location.href = "index.html", 2000);
+      } else {
+        mostrarDialog("📸 Comprovante", "Tire print do comprovante e envie ao suporte para ativação do VIP.");
+      }
+
+      atualizarBotoes(email);
+
+    } catch (err) {
+      loader.style.display = "none";
+      mostrarDialog("❌ Erro", err.message);
+    }
+  }
+
+  async function atualizarBotoes(email){
+    const planos = ["Gratuito","Semanal","Mensal"];
+    for(let p of planos){
+      const btn = document.querySelector(`button[onclick="assinarPlano('${p}')"]`);
+      if(!btn) continue;
+      btn.disabled = false;
+      btn.textContent = (p==="Gratuito") ? "Usar agora" : "Assinar";
+      btn.style.background = "linear-gradient(90deg,#ff3860,#ff7a00)";
+    }
+
+    if(!email) return;
+    const ref = doc(db, "assinaturas", email);
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      const dados = snap.data();
+      const btn = document.querySelector(`button[onclick="assinarPlano('${dados.plano}')"]`);
+      if(btn){
+        if(dados.status === "Confirmado" || dados.status === "Ativo"){
+          btn.textContent = "Ativo";
+          btn.style.background = "#00c853";
+          btn.disabled = true;
+        } else if(dados.status === "Aguardando pagamento"){
+          btn.textContent = "Aguardando pagamento";
+          btn.style.background = "#ffca28";
+          btn.disabled = true;
+        }
+      }
+    }
+  }
+
+  document.getElementById("emailUser").addEventListener("blur", (e)=>{
+    atualizarBotoes(e.target.value.trim());
+  });
+
+  window.assinarPlano = assinarPlano;
+</script>
+
+</body>
+</html>

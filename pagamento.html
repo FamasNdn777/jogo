@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento Pix</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+    body{background:#0f0f1a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
+    h1{font-size:1.8rem;margin-bottom:20px;color:#ff7a00;}
+    .pix-info{background:#1a1a2e;padding:20px;border-radius:15px;max-width:400px;width:100%;margin-top:20px;}
+    .pix-info p{margin:10px 0;}
+    .pix-info button{margin-top:10px;padding:12px 20px;border:none;border-radius:10px;background:#03dac6;color:#000;font-weight:bold;cursor:pointer;}
+    .pix-info button:hover{opacity:0.9;}
+    .voltar{margin-top:25px;display:inline-block;color:#03dac6;text-decoration:none;font-size:0.95rem;}
+
+    /* Botão WhatsApp */
+    .btn-whatsapp {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 30px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      background: #25D366;
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: 0.3s;
+    }
+    .btn-whatsapp img {
+      width: 22px;
+      height: 22px;
+    }
+    .btn-whatsapp:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom:25px; left:50%; transform: translateX(-50%);
+      background:#03dac6; color:#000; padding:16px 25px; border-radius:15px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.5); font-weight:bold;
+      display:flex; align-items:center; gap:10px;
+      animation: toastShow 0.5s ease, toastHide 0.5s ease 3s forwards;
+    }
+    .toast span {font-size:1.2rem;}
+    @keyframes toastShow { from {opacity:0; transform:translateX(-50%) translateY(20px);} to {opacity:1; transform:translateX(-50%) translateY(0);} }
+    @keyframes toastHide { from {opacity:1; transform:translateX(-50%) translateY(0);} to {opacity:0; transform:translateX(-50%) translateY(20px);} }
+  </style>
+</head>
+<body>
+
+<h1>Pagamento do Plano</h1>
+<p id="planoNome"></p>
+<p id="planoValor"></p>
+
+<div class="pix-info">
+  <p><b>Chave Pix:</b></p>
+  <p id="pixChave">91988230064</p>
+  <button onclick="copiarChave()">Copiar chave</button>
+</div>
+
+<!-- Botão WhatsApp -->
+<a href="#" id="btnComprovante" class="btn-whatsapp" target="_blank">
+  <img src="https://cdn-icons-png.flaticon.com/512/124/124034.png" alt="WhatsApp">
+  Enviar comprovante
+</a>
+
+<a href="index.html" class="voltar">← Voltar</a>
+
+<script>
+  // 👉 Sua chave Pix
+  const CHAVE_PIX = "91988230064";
+
+  // 👉 Pega o plano da URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const plano = urlParams.get("plano") || "Indefinido";
+  let valor = "0.00";
+
+  if(plano === "Semanal") valor = "5.90";
+  if(plano === "Mensal") valor = "15.90";
+
+  document.getElementById("planoNome").innerText = "Plano escolhido: " + plano;
+  document.getElementById("planoValor").innerText = "Valor: R$ " + valor;
+
+  // 👉 Função copiar chave com toast
+  function copiarChave(){
+    navigator.clipboard.writeText(CHAVE_PIX).then(()=>{
+      showToast("😊 Chave Pix copiada com sucesso!");
+    });
+  }
+
+  function showToast(msg){
+    const toast = document.createElement('div');
+    toast.className='toast';
+    toast.innerHTML = `<span>✔</span> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),4000);
+  }
+
+  // 👉 Configura link do WhatsApp
+  const btnComprovante = document.getElementById("btnComprovante");
+  const numeroWhatsApp = "+559188230064"; // coloque seu número aqui com DDI + DDD
+  btnComprovante.href = `https://wa.me/${numeroWhatsApp}?text=Olá!%20Segue%20o%20comprovante%20do%20pagamento%20do%20plano%20${plano}%20no%20valor%20de%20R$${valor}.`;
+</script>
+
+</body>
+</html>

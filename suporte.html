@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suporte VIP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial',sans-serif;}
+body{background:#0f0f1a;color:#fff;min-height:100vh;padding:50px 20px;display:flex;flex-direction:column;align-items:center;}
+h1{font-size:2rem;margin-bottom:40px;text-align:center;}
+h1 span{color:#ff7a00;}
+.container{width:100%;max-width:600px;display:flex;flex-direction:column;gap:20px;}
+input, textarea{width:100%;padding:12px;border-radius:10px;border:none;outline:none;background:#1a1a2e;color:#fff;resize:none;font-size:1rem;}
+textarea{height:120px;}
+button{padding:12px;border:none;border-radius:50px;background:linear-gradient(90deg,#ff3860,#ff7a00);color:#fff;font-size:1rem;cursor:pointer;transition:opacity 0.3s;}
+button:hover{opacity:0.9;}
+.dialog{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);justify-content:center;align-items:center;z-index:20;}
+.dialog-content{background:#4b0082;border-radius:20px;padding:25px;max-width:400px;width:90%;text-align:center;position:relative;}
+.dialog-content h2{color:#ffd700;margin-bottom:15px;}
+.dialog-content input, .dialog-content textarea{margin:8px 0;}
+.dialog-content button{width:80%;margin-top:10px;font-weight:bold;}
+.dialog-close{position:absolute;top:10px;right:15px;font-size:20px;cursor:pointer;color:#fff;}
+.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#03dac6;color:#000;padding:16px 25px;border-radius:15px;box-shadow:0 6px 20px rgba(0,0,0,0.5);animation:toastShow 0.5s ease, toastHide 0.5s ease 3s forwards;}
+@keyframes toastShow{from{opacity:0;transform:translateX(-50%) translateY(20px);} to{opacity:1;transform:translateX(-50%) translateY(0);}}
+@keyframes toastHide{from{opacity:1;transform:translateX(-50%) translateY(0);} to{opacity:0;transform:translateX(-50%) translateY(20px);}}
+</style>
+</head>
+<body>
+
+<h1>Suporte <span>VIP</span></h1>
+<div class="container">
+  <button onclick="abrirDialog()">Abrir Suporte</button>
+</div>
+
+<div class="dialog" id="dialog">
+  <div class="dialog-content">
+    <span class="dialog-close" onclick="fecharDialog()">×</span>
+    <h2>Envie sua mensagem</h2>
+    <input type="text" id="usuario" placeholder="Seu usuário">
+    <input type="email" id="email" placeholder="Seu e-mail">
+    <textarea id="mensagem" placeholder="Digite sua mensagem..."></textarea>
+    <button onclick="enviarMensagem()">Enviar</button>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "COLE_AQUI_SUA_URL_DO_SCRIPT";
+const FCM_SERVER_KEY = "COLE_AQUI_SUA_CHAVE_SERVIDOR_FCM"; // Para enviar notificação
+
+function abrirDialog(){ document.getElementById('dialog').style.display='flex'; }
+function fecharDialog(){ document.getElementById('dialog').style.display='none'; }
+
+async function enviarMensagem(){
+  let usuario = document.getElementById('usuario').value.trim();
+  let email = document.getElementById('email').value.trim();
+  let mensagem = document.getElementById('mensagem').value.trim();
+  let tokenFCM = "TOKEN_DO_USUARIO_NO_APP"; // Cada usuário precisa ter token único
+
+  if(!usuario || !email || !mensagem){ showToast("Preencha todos os campos!"); return; }
+
+  let dados = [usuario,email,mensagem,new Date().toLocaleString(),"Nova","VIP","",""+tokenFCM];
+  let formData = new FormData();
+  formData.append("Function","CreateRow");
+  formData.append("page","SUPORTE_VIP");
+  formData.append("data",JSON.stringify(dados));
+
+  try{
+    await fetch(SCRIPT_URL,{method:"POST",body:formData});
+    fecharDialog();
+    showToast("✅ Sua mensagem foi enviada com sucesso!");
+    document.getElementById('usuario').value='';
+    document.getElementById('email').value='';
+    document.getElementById('mensagem').value='';
+
+    // Opcional: enviar notificação FCM para admins (ou equipe suporte)
+    enviarNotificacaoFCM("Nova mensagem de "+usuario, mensagem);
+  }catch(err){ showToast("❌ Erro ao enviar: "+err); }
+}
+
+function showToast(msg){
+  const toast = document.createElement('div');
+  toast.className='toast';
+  toast.innerText=msg;
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(),4000);
+}
+
+// Exemplo simples de enviar notificação via FCM usando fetch
+async function enviarNotificacaoFCM(titulo,mensagem){
+  try{
+    await fetch("https://fcm.googleapis.com/fcm/send",{
+      method:"POST",
+      headers:{
+        "Authorization":"key="+FCM_SERVER_KEY,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        to: "/topics/admins", // Ou o token do dispositivo
+        notification: { title: titulo, body: mensagem }
+      })
+    });
+  }catch(err){ console.log("Erro FCM:",err); }
+}
+</script>
+</body>
+</html>
