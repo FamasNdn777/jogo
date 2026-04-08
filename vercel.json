@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/api/genero/:genero", "destination": "/api/genero/[genero]" },
+    { "source": "/api/s2/genero/:genero", "destination": "/api/s2/genero/[genero]" }
+  ]
+}
