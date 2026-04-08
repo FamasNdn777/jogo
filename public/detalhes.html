@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draksyon - Detalhes</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+            background:#0d0d0f;
+            color:#fff;
+            -webkit-font-smoothing:antialiased;
+            overflow-y:auto;
+            padding-top:65px;
+        }
+        ::-webkit-scrollbar{width:5px;height:6px}
+        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:999px}
+        ::-webkit-scrollbar-track{background:transparent}
+
+        /* ── Header (igual index) ── */
+        .otk-header-fixed{
+            position:fixed;top:0;left:0;right:0;height:65px;
+            display:flex;align-items:center;justify-content:space-between;
+            padding:0 18px;
+            background:rgba(13,13,15,0.85);
+            backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+            border-bottom:1px solid rgba(255,255,255,0.04);
+            z-index:100;
+        }
+        .header-inner{
+            width:100%;max-width:1200px;margin:0 auto;
+            display:flex;align-items:center;justify-content:space-between;
+        }
+        .header-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:1px;text-align:center;flex:1}
+        .header-right{display:flex;align-items:center;gap:8px}
+        .icon-btn{background:transparent;border:none;color:#fff;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;transition:opacity .3s}
+        .icon-btn:hover{opacity:.7}
+        .server-indicator{font-size:10px;color:#5B7FFF;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(37,75,255,0.1);border:1px solid rgba(37,75,255,0.2);white-space:nowrap}
+
+        /* ── Drawer (igual index) ── */
+        .drawer-overlay{
+            position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:150;
+            opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s;
+            backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+        }
+        .drawer-overlay.open{opacity:1;visibility:visible}
+        .drawer{
+            position:fixed;top:0;left:0;bottom:0;width:270px;max-width:80vw;
+            background:#111113;z-index:200;
+            transform:translateX(-100%);
+            transition:transform .35s cubic-bezier(.4,0,.2,1);
+            display:flex;flex-direction:column;
+            border-right:1px solid rgba(255,255,255,0.06);
+            overflow-y:auto;
+        }
+        .drawer.open{transform:translateX(0)}
+        .drawer-top{
+            padding:20px 16px 14px;
+            display:flex;align-items:center;justify-content:space-between;
+            border-bottom:1px solid rgba(255,255,255,0.06);
+        }
+        .drawer-brand-row{display:flex;align-items:center;gap:10px}
+        .drawer-brand-logo{
+            width:34px;height:34px;border-radius:8px;
+            background:linear-gradient(135deg,#254BFF,#3A56F6);
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 10px rgba(37,75,255,0.3);overflow:hidden;
+        }
+        .drawer-brand-logo img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+        .drawer-brand-title{font-size:15px;font-weight:700;color:#fff;letter-spacing:.5px}
+        .drawer-close-btn{
+            background:none;border:none;color:#666;
+            width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:color .2s;
+        }
+        .drawer-close-btn:hover{color:#fff}
+        .drawer-nav{list-style:none;padding:8px 8px 0}
+        .drawer-nav-item{
+            display:flex;align-items:center;gap:12px;
+            padding:11px 12px;border-radius:8px;cursor:pointer;
+            color:#888;font-size:14px;font-weight:500;
+            transition:all .2s;border:none;background:none;width:100%;text-align:left;text-decoration:none;
+        }
+        .drawer-nav-item:hover{background:rgba(255,255,255,0.04);color:#ccc}
+        .drawer-nav-item.active{background:rgba(37,75,255,0.12);color:#fff}
+        .drawer-nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.6}
+        .drawer-nav-item.active svg{opacity:1;color:#5B7FFF}
+        li + li .drawer-nav-item{margin-top:1px}
+        .drawer-divider{height:1px;background:rgba(255,255,255,0.05);margin:6px 16px}
+        .drawer-section-label{padding:10px 16px 4px;font-size:11px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase}
+        .server-option{
+            display:flex;align-items:center;gap:12px;
+            padding:10px 12px;border-radius:8px;cursor:pointer;
+            color:#888;font-size:13px;font-weight:500;
+            transition:all .2s;border:none;background:none;width:100%;text-align:left;
+        }
+        .server-option:hover{background:rgba(255,255,255,0.04);color:#ccc}
+        .server-option.active{background:rgba(37,75,255,0.12);color:#fff}
+        .server-radio{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s}
+        .server-option.active .server-radio{border-color:#254BFF}
+        .server-radio-dot{width:8px;height:8px;border-radius:50%;background:#254BFF;display:none}
+        .server-option.active .server-radio-dot{display:block}
+        .server-name{flex:1}
+        .server-badge{font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(37,75,255,0.15);color:#5B7FFF;font-weight:600}
+        .drawer-footer{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px}
+        .drawer-avatar{width:35px;height:35px;border-radius:50%;background:#1a1a1e;background-size:cover;background-position:center;flex-shrink:0}
+        .drawer-user-info{display:flex;flex-direction:column;gap:1px;flex:1}
+        .drawer-user-name{font-size:14px;font-weight:600;color:#ddd}
+        .drawer-user-role{font-size:11px;color:#555}
+
+        /* ── Hero area ── */
+        .hero-area{
+            position:relative;overflow:hidden;
+            padding:30px 20px 0;
+            display:flex;flex-direction:column;align-items:center;
+            text-align:center;
+        }
+        .hero-bg{
+            position:absolute;inset:0;
+            background-size:cover;background-position:center;
+            filter:blur(30px) saturate(1.2);opacity:.2;transform:scale(1.3);
+        }
+        .hero-gradient{
+            position:absolute;inset:0;
+            background:linear-gradient(180deg,rgba(13,13,15,0.3) 0%,rgba(13,13,15,0.7) 50%,rgba(13,13,15,1) 100%);
+        }
+        .hero-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;max-width:600px;width:100%}
+        .hero-poster{
+            width:160px;height:230px;
+            border-radius:14px;object-fit:cover;
+            border:2px solid rgba(255,255,255,0.06);
+            box-shadow:0 20px 50px -12px rgba(0,0,0,0.8);
+        }
+        .anime-title{
+            font-size:20px;font-weight:700;
+            color:#fff;line-height:1.35;
+            margin-top:18px;
+            display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+        }
+
+        /* ── Assistir button ── */
+        .btn-assistir-main{
+            display:flex;align-items:center;justify-content:center;gap:10px;
+            width:100%;max-width:400px;
+            margin-top:18px;
+            padding:14px 20px;
+            background:linear-gradient(90deg,#254BFF,#3A56F6);
+            color:#fff;border:none;border-radius:12px;
+            font-size:16px;font-weight:700;
+            cursor:pointer;
+            box-shadow:0 8px 24px rgba(37,75,255,0.35);
+            transition:box-shadow .3s;
+            text-decoration:none;
+        }
+        .btn-assistir-main:hover{box-shadow:0 12px 32px rgba(37,75,255,0.5)}
+        .btn-assistir-main svg{width:18px;height:18px}
+
+        /* ── Subtitle ── */
+        .anime-subtitle{
+            margin-top:12px;
+            font-size:13px;color:#9aa0a6;line-height:1.5;
+            padding-bottom:24px;
+        }
+
+        /* ── Main Content ── */
+        .main-content{max-width:1100px;margin:0 auto;padding:0 16px 30px}
+
+        /* ── Section headers ── */
+        .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+        .section-icon{width:24px;height:24px;color:#E85D5D;flex-shrink:0}
+        .section-icon.blue{color:#5B7FFF}
+        .section-title{font-size:18px;color:#fff;font-weight:700}
+
+        /* ── Descrição ── */
+        .descricao-section{margin-bottom:24px}
+        .descricao-text{
+            font-size:14px;color:#9aa0a6;line-height:1.7;
+            max-height:180px;overflow-y:auto;
+        }
+
+        /* ── Genre chips ── */
+        .genre-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+        .genre-chip{
+            padding:8px 16px;border-radius:10px;
+            background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.08);
+            font-size:13px;color:#ccc;font-weight:500;
+            transition:all .2s;cursor:default;
+        }
+        .genre-chip:hover{border-color:rgba(37,75,255,0.3);color:#fff}
+        .genre-chip.hidden{display:none}
+        .genre-toggle{
+            padding:8px 16px;border-radius:10px;
+            background:rgba(37,75,255,0.08);
+            border:1px solid rgba(37,75,255,0.2);
+            font-size:13px;color:#5B7FFF;font-weight:600;
+            cursor:pointer;transition:all .2s;
+        }
+        .genre-toggle:hover{background:rgba(37,75,255,0.15);border-color:rgba(37,75,255,0.4)}
+
+        /* ── Episódios toolbar ── */
+        .ep-toolbar{
+            display:flex;align-items:center;gap:10px;
+            margin-bottom:12px;
+        }
+        .ep-search-box{position:relative;flex:1}
+        .ep-search{
+            width:100%;padding:11px 14px 11px 40px;
+            background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:10px;color:#fff;font-size:14px;outline:none;
+            transition:border-color .2s;
+        }
+        .ep-search:focus{border-color:rgba(37,75,255,0.4)}
+        .ep-search::placeholder{color:#555}
+        .ep-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#555;pointer-events:none}
+        .ep-ordenar{
+            width:42px;height:42px;
+            display:flex;align-items:center;justify-content:center;
+            background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+            color:#9aa0a6;cursor:pointer;transition:all .2s;flex-shrink:0;
+        }
+        .ep-ordenar:hover{border-color:rgba(37,75,255,0.3);color:#fff;background:rgba(37,75,255,0.06)}
+        .ep-ordenar svg{width:18px;height:18px}
+
+        /* ── Episode list ── */
+        .ep-list{display:flex;flex-direction:column;gap:10px;padding-bottom:24px}
+        .ep-card{
+            display:flex;align-items:center;gap:12px;
+            text-decoration:none;color:#fff;
+            background:rgba(255,255,255,0.04);
+            border-radius:12px;padding:14px 12px;
+            border:1px solid rgba(255,255,255,0.06);
+            transition:border-color .3s,background .3s;cursor:pointer;
+        }
+        .ep-card:hover{border-color:rgba(37,75,255,0.2);background:rgba(255,255,255,0.06)}
+        .ep-card-info{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+        .ep-card-title{
+            font-size:15px;font-weight:700;line-height:1.3;
+            display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+        }
+        .ep-card-status{font-size:12px;color:#666;letter-spacing:.3px}
+        .ep-card-play{
+            width:44px;height:44px;
+            border-radius:50%;flex-shrink:0;
+            background:linear-gradient(135deg,#254BFF,#3A56F6);
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 4px 14px rgba(37,75,255,0.35);
+            transition:box-shadow .3s;
+        }
+        .ep-card:hover .ep-card-play{box-shadow:0 6px 20px rgba(37,75,255,0.5)}
+        .ep-card-play svg{width:18px;height:18px;color:#fff;margin-left:2px}
+
+        /* ── Favoritar ── */
+        .btn-fav{
+            display:inline-flex;gap:6px;align-items:center;justify-content:center;
+            cursor:pointer;font-weight:600;font-size:12px;
+            background:transparent;color:#fff;
+            border:1px solid rgba(255,255,255,0.12);
+            border-radius:10px;padding:8px 14px;
+            transition:all .3s;margin-top:10px;
+        }
+        .btn-fav:hover{background:rgba(255,255,255,0.05)}
+        .btn-fav.active{background:rgba(37,75,255,0.15);border-color:rgba(37,75,255,0.4)}
+        .btn-fav svg{width:14px;height:14px}
+
+        .loading-screen{display:flex;align-items:center;justify-content:center;min-height:60vh;color:#9aa0a6;font-size:15px}
+        .content-wrapper{display:none}
+
+        /* ── Responsive ── */
+        @media(max-width:340px){
+            .hero-poster{width:130px;height:190px}
+            .anime-title{font-size:17px}
+        }
+        @media(min-width:400px){
+            .hero-poster{width:170px;height:245px}
+            .anime-title{font-size:22px}
+        }
+        @media(min-width:600px){
+            .hero-poster{width:190px;height:275px}
+            .anime-title{font-size:24px}
+            .main-content{padding:0 24px 40px}
+        }
+        @media(min-width:768px){
+            .otk-header-fixed{padding:0 28px}
+            .header-title{font-size:22px}
+            .hero-poster{width:200px;height:290px}
+            .anime-title{font-size:26px}
+            .main-content{padding:0 28px 40px}
+            .ep-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+        }
+        @media(min-width:1024px){
+            .hero-poster{width:220px;height:320px}
+            .anime-title{font-size:28px}
+            .main-content{padding:0 40px 50px}
+        }
+        @media(min-width:1280px){
+            .ep-list{grid-template-columns:repeat(3,1fr)}
+        }
+        @media(max-width:380px){
+            .main-content{padding:0 14px 30px}
+        }
+    </style>
+</head>
+<body>
+    <!-- Drawer overlay -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+
+    <!-- Drawer lateral (igual index) -->
+    <nav class="drawer" id="drawer">
+        <div class="drawer-top">
+            <div class="drawer-brand-row">
+                <div class="drawer-brand-logo">
+                    <img src="https://i.pinimg.com/736x/0d/af/79/0daf79ba1549f23b9caf058155a4bd42.jpg" alt="Logo">
+                </div>
+                <span class="drawer-brand-title">DRAKSYON</span>
+            </div>
+            <button class="drawer-close-btn" id="drawer-close" aria-label="Fechar menu">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <ul class="drawer-nav">
+            <li><a class="drawer-nav-item" href="index.html">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 00-1-1h-4a1 1 0 00-1 1v8"/><path d="M3 10a2 2 0 01.709-1.528l7-5.999a2 2 0 012.582 0l7 5.999A2 2 0 0121 10v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                <span>Home</span>
+            </a></li>
+            <li><a class="drawer-nav-item" href="index.html?tab=dublados">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                <span>Dublados</span>
+            </a></li>
+            <li><a class="drawer-nav-item" href="index.html?tab=legendados">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h4"/><path d="M15 15h2"/><path d="M7 11h2"/><path d="M13 11h4"/></svg>
+                <span>Legendados</span>
+            </a></li>
+            <li><a class="drawer-nav-item" href="index.html?tab=lancamentos">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Lançamentos</span>
+            </a></li>
+            <li><a class="drawer-nav-item" href="index.html?tab=categoria">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                <span>Categorias</span>
+            </a></li>
+        </ul>
+        <div class="drawer-divider"></div>
+        <div class="drawer-section-label">Selecionar Servidor</div>
+        <ul class="drawer-nav" id="server-list">
+            <li><button class="server-option" data-server="s1">
+                <div class="server-radio"><div class="server-radio-dot"></div></div>
+                <span class="server-name">AnimeFire</span>
+                <span class="server-badge">S1</span>
+            </button></li>
+            <li><button class="server-option" data-server="s2">
+                <div class="server-radio"><div class="server-radio-dot"></div></div>
+                <span class="server-name">Animes Online</span>
+                <span class="server-badge">S2</span>
+            </button></li>
+        </ul>
+        <div class="drawer-footer">
+            <div class="drawer-avatar"></div>
+            <div class="drawer-user-info">
+                <span class="drawer-user-name">Visitante</span>
+                <span class="drawer-user-role">Usuário</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header (igual index) -->
+    <header class="otk-header-fixed">
+        <div class="header-inner">
+            <button class="icon-btn" id="menu-btn" aria-label="Menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+            </button>
+            <span class="header-title">DRAKSYON</span>
+            <div class="header-right">
+                <span class="server-indicator" id="server-indicator">S1</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="loading-screen" id="loading">Carregando detalhes...</div>
+
+    <div class="content-wrapper" id="conteudo">
+        <!-- Hero: Centered poster + title + button -->
+        <div class="hero-area">
+            <div class="hero-bg" id="hero-bg"></div>
+            <div class="hero-gradient"></div>
+            <div class="hero-content">
+                <img class="hero-poster" id="capa" src="" alt="Capa">
+                <h1 class="anime-title" id="titulo"></h1>
+                <a class="btn-assistir-main" id="btn-assistir-primeiro" href="#">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span id="btn-assistir-label">Assistir S1E01</span>
+                </a>
+                <p class="anime-subtitle" id="anime-subtitle"></p>
+                <button class="btn-fav" id="fav-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                    FAVORITAR
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Descrição -->
+            <div class="descricao-section">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span class="section-title">Descrição</span>
+                </div>
+                <div class="descricao-text" id="sinopse"></div>
+            </div>
+
+            <!-- Gêneros -->
+            <div class="genre-row" id="genre-row"></div>
+
+            <!-- Episódios -->
+            <div class="section-header">
+                <svg class="section-icon blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+                <span class="section-title">Episódios</span>
+            </div>
+
+            <div class="ep-toolbar">
+                <div class="ep-search-box">
+                    <svg class="ep-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                    <input class="ep-search" id="ep-search" placeholder="Buscar episódio...">
+                </div>
+                <button class="ep-ordenar" id="btn-ordenar" title="Ordenar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                </button>
+            </div>
+
+            <div class="ep-list" id="ep-list"></div>
+        </div>
+    </div>
+
+    <script>
+    var API_BASE = 'http://127.0.0.1:3000';
+    var LS_SERVER = 'draksyon_server_v1';
+    var currentServer = localStorage.getItem(LS_SERVER) || 's1';
+    var animeSlug = new URLSearchParams(window.location.search).get('anime') || '';
+
+    function getApiPrefix() { return currentServer === 's2' ? '/api/s2' : '/api'; }
+
+    // Server indicator
+    var indicator = document.getElementById('server-indicator');
+    if (currentServer === 's2') { indicator.textContent = 'S2'; indicator.title = 'Animes Online'; }
+    else { indicator.textContent = 'S1'; indicator.title = 'AnimeFire'; }
+
+    // Drawer
+    var drawer = document.getElementById('drawer');
+    var overlay = document.getElementById('drawer-overlay');
+    document.getElementById('menu-btn').addEventListener('click', function(){ drawer.classList.add('open'); overlay.classList.add('open'); });
+    document.getElementById('drawer-close').addEventListener('click', function(){ drawer.classList.remove('open'); overlay.classList.remove('open'); });
+    overlay.addEventListener('click', function(){ drawer.classList.remove('open'); overlay.classList.remove('open'); });
+
+    // Server selector in drawer
+    var serverBtns = document.querySelectorAll('#server-list .server-option');
+    serverBtns.forEach(function(btn){
+        if(btn.dataset.server === currentServer) btn.classList.add('active');
+        btn.addEventListener('click', function(){
+            serverBtns.forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            currentServer = btn.dataset.server;
+            localStorage.setItem(LS_SERVER, currentServer);
+            if (currentServer === 's2') { indicator.textContent = 'S2'; indicator.title = 'Animes Online'; }
+            else { indicator.textContent = 'S1'; indicator.title = 'AnimeFire'; }
+            drawer.classList.remove('open'); overlay.classList.remove('open');
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('conteudo').style.display = 'none';
+            carregar();
+        });
+    });
+
+    var allEpisodes = [];
+    var ascending = false;
+    var isFav = false;
+    var LS_FAV = 'draksyon_favs_v1';
+    var genresExpanded = false;
+
+    function getFavs(){ return JSON.parse(localStorage.getItem(LS_FAV)||'[]'); }
+    function saveFavs(arr){ localStorage.setItem(LS_FAV, JSON.stringify(arr)); }
+
+    async function carregar() {
+        if (!animeSlug) { document.getElementById('loading').textContent = 'Nenhum anime selecionado.'; return; }
+        try {
+            var res = await fetch(API_BASE + getApiPrefix() + '/detalhes?anime=' + animeSlug);
+            var data = await res.json();
+
+            document.getElementById('titulo').innerText = data.titulo || 'Sem título';
+            var capaUrl = data.capa || '';
+            document.getElementById('capa').src = capaUrl;
+            document.getElementById('hero-bg').style.backgroundImage = 'url(' + capaUrl + ')';
+            document.getElementById('sinopse').innerText = data.sinopse || 'Sinopse não disponível.';
+
+            // Subtitle
+            var subtitle = document.getElementById('anime-subtitle');
+            subtitle.innerText = 'Assistir ' + (data.titulo || '') + ' Online';
+
+            // First episode button
+            var eps = data.episodios || [];
+            allEpisodes = eps;
+            if (eps.length > 0) {
+                var firstEp = eps[0];
+                var btnAssistir = document.getElementById('btn-assistir-primeiro');
+                btnAssistir.href = 'player-animes.html?anime=' + encodeURIComponent(animeSlug) +
+                    '&ep=' + encodeURIComponent(firstEp.link) +
+                    '&nome=' + encodeURIComponent(firstEp.nome || 'Episódio 1') +
+                    '&idx=0';
+                document.getElementById('btn-assistir-label').textContent = 'Assistir S1E01';
+            }
+
+            // Favoritos
+            var favs = getFavs();
+            isFav = favs.indexOf(animeSlug) !== -1;
+            updateFavUI();
+
+            document.getElementById('fav-btn').addEventListener('click', function(){
+                var favs = getFavs();
+                if(isFav){ favs = favs.filter(function(x){return x!==animeSlug;}); isFav=false; }
+                else { favs.push(animeSlug); isFav=true; }
+                saveFavs(favs);
+                updateFavUI();
+            });
+
+            // Gêneros
+            var genreRow = document.getElementById('genre-row');
+            genreRow.innerHTML = '';
+            var allGenres = data.generos || [];
+            allGenres.forEach(function(g, i) {
+                var chip = document.createElement('span');
+                chip.className = 'genre-chip' + (i >= 6 ? ' hidden' : '');
+                chip.textContent = g;
+                genreRow.appendChild(chip);
+            });
+            if (allGenres.length > 6) {
+                var toggleBtn = document.createElement('button');
+                toggleBtn.className = 'genre-toggle';
+                toggleBtn.id = 'genre-toggle';
+                toggleBtn.textContent = '+' + (allGenres.length - 6) + ' mais';
+                toggleBtn.addEventListener('click', function() {
+                    genresExpanded = !genresExpanded;
+                    var chips = genreRow.querySelectorAll('.genre-chip');
+                    chips.forEach(function(c, i) { if (i >= 6) c.classList.toggle('hidden', !genresExpanded); });
+                    toggleBtn.textContent = genresExpanded ? 'Ver menos' : '+' + (allGenres.length - 6) + ' mais';
+                });
+                genreRow.appendChild(toggleBtn);
+            }
+
+            renderEpisodes(allEpisodes);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('conteudo').style.display = 'block';
+        } catch (e) {
+            console.error(e);
+            var serverName = currentServer === 's2' ? 'Animes Online' : 'AnimeFire';
+            document.getElementById('loading').innerHTML = 'Erro ao carregar (' + serverName + ').<br><span style="font-size:12px;color:#555;">Verifique se o servidor está rodando na porta 3000.</span>';
+        }
+    }
+
+    function updateFavUI(){
+        var btn = document.getElementById('fav-btn');
+        if(isFav){
+            btn.classList.add('active');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="#254BFF" stroke="#254BFF" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> FAVORITADO';
+        } else {
+            btn.classList.remove('active');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> FAVORITAR';
+        }
+    }
+
+    function renderEpisodes(eps) {
+        var lista = document.getElementById('ep-list');
+        lista.innerHTML = '';
+        eps.forEach(function(ep, idx) {
+            var card = document.createElement('a');
+            card.className = 'ep-card';
+            card.href = 'player-animes.html?anime=' + encodeURIComponent(animeSlug) +
+                '&ep=' + encodeURIComponent(ep.link) +
+                '&nome=' + encodeURIComponent(ep.nome || ('Episódio ' + (idx + 1))) +
+                '&idx=' + idx;
+            var titulo = ep.nome || 'Episódio ' + (idx + 1);
+            card.innerHTML =
+                '<div class="ep-card-info">' +
+                    '<div class="ep-card-title">' + titulo + '</div>' +
+                    '<div class="ep-card-status">Legendado</div>' +
+                '</div>' +
+                '<div class="ep-card-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+            lista.appendChild(card);
+        });
+    }
+
+    document.getElementById('btn-ordenar').addEventListener('click', function() {
+        ascending = !ascending;
+        var sorted = allEpisodes.slice();
+        if (ascending) sorted.reverse();
+        renderEpisodes(sorted);
+    });
+
+    document.getElementById('ep-search').addEventListener('input', function(e) {
+        var q = (e.target.value || '').trim();
+        if (!q) { renderEpisodes(allEpisodes); return; }
+        var filtered = allEpisodes.filter(function(ep) {
+            var num = (ep.nome || '').replace(/[^0-9]/g, '');
+            return num.indexOf(q) !== -1;
+        });
+        renderEpisodes(filtered);
+    });
+
+    document.getElementById('ep-search').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            var q = (e.target.value || '').trim();
+            var idx = allEpisodes.findIndex(function(ep) { return (ep.nome || '').replace(/[^0-9]/g, '') === q; });
+            if (idx !== -1 && allEpisodes[idx].link) {
+                window.location.href = 'player-animes.html?anime=' + encodeURIComponent(animeSlug) +
+                    '&ep=' + encodeURIComponent(allEpisodes[idx].link) +
+                    '&nome=' + encodeURIComponent(allEpisodes[idx].nome) +
+                    '&idx=' + idx;
+            }
+        }
+    });
+
+    carregar();
+    </script>
+</body>
+</html>
